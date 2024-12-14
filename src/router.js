@@ -2,10 +2,10 @@
 
 import { createRouter, createWebHistory } from 'vue-router';
 import HelloWorld from './components/HelloWorld.vue'; // Sửa đường dẫn
-import MyDictionary from './components/MyDictionary.vue'; // Đường dẫn tới component Dictionary
-import MyCalculator from './components/MyCalculator.vue';
-import GreeTing from './components/GreeTing.vue';
-import ManageEmployee from './components/ManageEmployee.vue';
+import MyDictionary from './views/MyDictionary.vue'; // Đường dẫn tới component Dictionary
+import MyCalculator from './views/MyCalculator.vue';
+import GreeTing from './views/GreeTing.vue';
+import ManageEmployee from './views/ManageEmployee.vue';
 
 const routes = [
   {
