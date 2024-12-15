@@ -54,12 +54,12 @@
               id="salaryRange"
               v-model="searchFilters.salaryRange"
             >
-            <option value="">Tất cả</option>
-              <option value="1"> bé hơn 5 trieu </option>
+              <option value="">Tất cả</option>
+              <option value="1">bé hơn 5 trieu</option>
               <option value="2">từ 5 triệu đến 10 triệu</option>
               <option value="3">từ 10 triệu đến 20 triệu</option>
-              <option value="4">trên 20 triệu</option>  
-          </select>
+              <option value="4">trên 20 triệu</option>
+            </select>
           </div>
           <div class="col-md-4">
             <label for="phone" class="form-label">Số điện thoại</label>
@@ -188,8 +188,14 @@
                   class="form-control"
                   id="name"
                   v-model="formData.name"
+                  @blur="handleBlur('name')"
                   required
                 />
+                <small
+                  v-if="isTouched.name && !formData.name"
+                  class="text-danger"
+                  >Tên là bắt buộc.</small
+                >
               </div>
               <div class="mb-3">
                 <label for="birthDate" class="form-label">Ngày sinh:</label>
@@ -198,8 +204,14 @@
                   class="form-control"
                   id="birthDate"
                   v-model="formData.birthDate"
+                  @blur="handleBlur('birthDate')"
                   required
                 />
+                <small
+                  v-if="isTouched.birthDate && !formData.birthDate"
+                  class="text-danger"
+                  >Ngày sinh là bắt buộc.</small
+                >
               </div>
               <div class="mb-3">
                 <label for="gender" class="form-label">Giới tính:</label>
@@ -207,11 +219,17 @@
                   class="form-select"
                   id="gender"
                   v-model="formData.gender"
+                  @blur="handleBlur('gender')"
                   required
                 >
                   <option value="MALE">Nam</option>
                   <option value="FEMALE">Nữ</option>
                 </select>
+                <small
+                  v-if="isTouched.gender && !formData.gender"
+                  class="text-danger"
+                  >Giới tính là bắt buộc.</small
+                >
               </div>
               <div class="mb-3">
                 <label for="salary" class="form-label">Lương:</label>
@@ -220,9 +238,12 @@
                   class="form-control"
                   id="salary"
                   v-model="formData.salary"
+                  @blur="handleBlur('salary')"
                   required
                 />
-                <small v-if="isSalaryInvalid" class="text-danger"
+                <small
+                  v-if="isTouched.salary && formData.salary <= 0"
+                  class="text-danger"
                   >Lương phải lớn hơn 0.</small
                 >
               </div>
@@ -233,9 +254,15 @@
                   class="form-control"
                   id="phone"
                   v-model="formData.phone"
+                  @blur="handleBlur('phone')"
                   required
                 />
-                <small v-if="isPhoneInvalid" class="text-danger"
+                <small
+                  v-if="
+                    isTouched.phone &&
+                    (formData.phone.length < 10 || formData.phone.length > 11)
+                  "
+                  class="text-danger"
                   >Số điện thoại phải từ 10 đến 11 số.</small
                 >
               </div>
@@ -251,7 +278,7 @@
               <button
                 type="submit"
                 class="btn btn-primary"
-                :disabled="isSalaryInvalid || isPhoneInvalid"
+                :disabled="isSalaryInvalid || isPhoneInvalid || !isFormValid"
               >
                 {{ formMode === "add" ? "Thêm" : "Cập nhật" }}
               </button>
@@ -337,6 +364,13 @@ export default {
         departmentId: "",
       },
       detailData: {},
+      isTouched: {
+        name: false,
+        birthDate: false,
+        gender: false,
+        salary: false,
+        phone: false,
+      },
     };
   },
   computed: {
@@ -347,8 +381,30 @@ export default {
       const phoneRegex = /^[0-9]{10,11}$/;
       return !phoneRegex.test(this.formData.phone);
     },
+    isFormValid() {
+      return (
+        this.formData.name &&
+        this.formData.birthDate &&
+        this.formData.gender &&
+        !this.isSalaryInvalid &&
+        !this.isPhoneInvalid
+      );
+    },
   },
   methods: {
+    // Reset touched fields
+    resetTouched() {
+      this.isTouched = {
+        name: false,
+        birthDate: false,
+        gender: false,
+        salary: false,
+        phone: false,
+      };
+    },
+    handleBlur(field) {
+      this.isTouched[field] = true;
+    },
     async detailEmployee(id) {
       const response = await employeeApi.fetchById(id);
       this.detailData = response.data;
@@ -360,7 +416,6 @@ export default {
     },
     async searchEmployees() {
       try {
-        // Gửi các bộ lọc đến API (giả sử backend hỗ trợ tìm kiếm qua query params)
         const response = await employeeApi.search(this.searchFilters);
         this.employees = response.data;
       } catch (error) {
@@ -368,7 +423,6 @@ export default {
       }
     },
     resetFilters() {
-      // Reset toàn bộ bộ lọc về giá trị mặc định
       this.searchFilters = {
         name: "",
         dobFrom: "",
@@ -378,7 +432,7 @@ export default {
         phone: "",
         departmentId: "",
       };
-      this.fetchEmployees(); // Lấy lại toàn bộ dữ liệu
+      this.fetchEmployees();
     },
     formatDate(date) {
       const formattedDate = new Date(date);
@@ -402,11 +456,13 @@ export default {
         salary: 0,
         phone: "",
       };
+      this.resetTouched(); // Reset the touched state
       this.showForm = true;
     },
     showUpdateForm(employee) {
       this.formMode = "update";
       this.formData = { ...employee };
+      this.resetTouched(); // Reset the touched state for update form as well
       this.showForm = true;
     },
     async handleSubmit() {
