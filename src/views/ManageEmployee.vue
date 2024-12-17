@@ -334,6 +334,27 @@
         </div>
       </div>
     </div>
+    <!-- pagination -->
+
+    <div
+      class="pagination d-flex justify-content-center align-items-center mt-3"
+    >
+      <button
+        class="btn btn-secondary me-2"
+        :disabled="pagination.number === 0"
+        @click="changePage(pagination.number - 1)"
+      >
+        Trước
+      </button>
+      <span> Trang {{ pagination.number +1}} / {{ pagination.totalPages }} </span>
+      <button
+        class="btn btn-secondary ms-2"
+        :disabled="pagination.number +1 >= pagination.totalPages"
+        @click="changePage(pagination.number + 1)"
+      >
+        Sau
+      </button>
+    </div>
   </div>
 </template>
 
@@ -343,6 +364,12 @@ export default {
   data() {
     return {
       employees: [],
+      pagination: {
+        totalElements: 0,
+        number: 0, 
+        totalPages: 0,
+        size: 2,
+      },
       showForm: false,
       showDetail: false,
       formMode: "add",
@@ -411,13 +438,42 @@ export default {
       this.showDetail = true;
     },
     async fetchEmployees() {
-      const response = await employeeApi.fetchAll();
-      this.employees = response.data;
+      
+      const params = {
+        ...this.searchFilters,
+        page: this.pagination.number,
+        size: this.pagination.size, 
+      };
+      
+
+      try {
+        const response = await employeeApi.fetchAll(params);
+
+        
+        this.employees = response.data.content; 
+        this.pagination.totalPages = response.data.page.totalPages; 
+        this.pagination.number = response.data.page.number ; 
+        this.pagination.totalElements = response.data.page.totalElements;
+ 
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách nhân viên:", error);
+      }
     },
+
+    async changePage(page) {
+      if (page < 0 || page > this.pagination.totalPages) return; 
+      this.pagination.number = page; 
+      
+      await this.fetchEmployees(); 
+    },
+
     async searchEmployees() {
       try {
         const response = await employeeApi.search(this.searchFilters);
-        this.employees = response.data;
+        this.employees = response.data.content; 
+        this.pagination.totalPages = response.data.page.totalPages; 
+        this.pagination.number = response.data.page.number ; 
+        this.pagination.totalElements = response.data.page.totalElements; 
       } catch (error) {
         console.error("Lỗi khi tìm kiếm:", error);
       }
@@ -432,7 +488,8 @@ export default {
         phone: "",
         departmentId: "",
       };
-      this.fetchEmployees();
+      this.pagination.number = 1; 
+      this.fetchEmployees(); 
     },
     formatDate(date) {
       const formattedDate = new Date(date);
@@ -456,13 +513,13 @@ export default {
         salary: 0,
         phone: "",
       };
-      this.resetTouched(); // Reset the touched state
+      this.resetTouched();
       this.showForm = true;
     },
     showUpdateForm(employee) {
       this.formMode = "update";
       this.formData = { ...employee };
-      this.resetTouched(); // Reset the touched state for update form as well
+      this.resetTouched();
       this.showForm = true;
     },
     async handleSubmit() {
@@ -491,7 +548,6 @@ export default {
 </script>
 
 <style>
-/* Tùy chỉnh khoảng cách và bố cục */
 .card {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 8px;

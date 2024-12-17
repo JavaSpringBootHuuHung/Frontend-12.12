@@ -1,8 +1,9 @@
 import instance from "@/common";
 
 export const employeeApi = {
-  fetchAll() {
-    return instance.get("/employees");
+  fetchAll(params) {
+   
+    return instance.get("/employees", { params: params });
   },
   fetchById(id) {
     return instance.get(`/employees/${id}`);
