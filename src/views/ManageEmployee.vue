@@ -360,6 +360,8 @@
 
 <script>
 import { employeeApi } from "@/services/api";
+import Toastify from "toastify-js";
+import "toastify-js/src/toastify.css";
 export default {
   data() {
     return {
@@ -523,20 +525,42 @@ export default {
       this.showForm = true;
     },
     async handleSubmit() {
-      if (this.formMode === "add") {
-        await employeeApi.create(this.formData);
-      } else if (this.formMode === "update") {
-        await employeeApi.update(this.formData.id, this.formData);
-      }
-      this.closeForm();
-      this.fetchEmployees();
-    },
-    async deleteEmployee(id) {
-      if (confirm("Bạn có chắc chắn muốn xóa nhân viên này không?")) {
-        await employeeApi.delete(id);
-        this.fetchEmployees();
-      }
-    },
+  if (this.formMode === "add") {
+    await employeeApi.create(this.formData);
+    Toastify({
+      text: "Thêm nhân viên thành công!",
+      duration: 3000, // Thời gian hiển thị
+      gravity: "top", // Vị trí hiển thị: top/bottom
+      position: "right", // Vị trí bên phải hoặc bên trái
+      backgroundColor: "green",
+    }).showToast();
+  } else if (this.formMode === "update") {
+    await employeeApi.update(this.formData.id, this.formData);
+    Toastify({
+      text: "Cập nhật nhân viên thành công!",
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "blue",
+    }).showToast();
+  }
+  this.closeForm();
+  this.fetchEmployees();
+},
+
+async deleteEmployee(id) {
+  if (confirm("Bạn có chắc chắn muốn xóa nhân viên này không?")) {
+    await employeeApi.delete(id);
+    Toastify({
+      text: "Xóa nhân viên thành công!",
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "red",
+    }).showToast();
+    this.fetchEmployees();
+  }
+},
     closeForm() {
       this.showForm = false;
     },
